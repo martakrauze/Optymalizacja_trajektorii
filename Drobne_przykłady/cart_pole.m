@@ -17,7 +17,7 @@ global len = 0.5; #długość wachadła
 #umax=20
 #dmax=2
 
-# p - przemieszczenie, v - prędkość, a - przyspieszenie, 1- wózek, 2- wachadło
+# q - przemieszczenie, v - prędkość, a - przyspieszenie, 1- wózek, 2- wachadło
 
 # przybliżenie początkowe - przmieszczenie liniowo, prędkość = 1, przyspieszenie = 0
 
