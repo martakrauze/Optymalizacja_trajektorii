@@ -1,99 +1,83 @@
 clear;
 clc;
 
-#liczba członów
-global N=3;
 
-# krok całkowania
-global n=5;
+# Zmienne globalne
+global number_of_parts = 3; #liczba członów
+global number_of_time_steps=5; #liczba kroków czasowych
 global T=1; #czas ruchu
-global h=T/(n-1);
-global m=[1,1,1]; #masa
-global l=[1,1.2,0.5]; #długość
-# global grav=9.81;
+global h=T/(number_of_time_steps-1); #krok całkowy
+global mass=[1,1,1]; #masa
+global partslength=[1,1.2,0.5]; #długość
+
 
 # położenie końcowe końcówki układu
-
 global xk=1;
 global yk=1;
 
-# p - kąt, v - prędkość kątowa, a - przyspieszenie kątowe, u - moment napędzający
 
-x0 = zeros(4*N*n,1);
+x0 = zeros(4*number_of_parts*number_of_time_steps,1);
+# 4 ponieważ 4 wielkości angle, velocity, acceleration, torque
 
-function vec = trapezoidal_transcription(x, xdot, n, h)
-    vec = zeros(n-1,1);
-    for i=[1:n-1]
-        vec(i) = x(i+1)-x(i)-1/2*h*(xdot(i+1)+xdot(i));
+
+function equations = trapezoidal_transcription(x, xdot)
+
+    global number_of_time_steps;
+    global h;
+
+    equations = zeros(number_of_time_steps-1,1);
+
+    for i=[1:number_of_time_steps-1]
+        equations(i) = x(i+1)-x(i)-1/2*h*(xdot(i+1)+xdot(i));
     endfor
+
 endfunction
 
 
 # Zdyskretyzowanie równania ruchu(równowagi)
 function r = g (x)
-    global n;
-    global N;
+
+    global number_of_time_steps;
+    global number_of_parts;
     global h;
-    global m;
-    global l;
+    global mass;
+    global partslength;
     global xk;
     global yk;
 
-    p=[]; v=[]; a=[]; u=[];
+    [angle, velocity, acceleration, torque] = unpacking_x(x, number_of_parts, number_of_time_steps);
 
-    w=[]; r0=[];
+    transcription_equations = []; boundary_conditions = [];
 
-    for i=[1:N]
-        b = x([(i-1)*n+1:i*n]);
-        p=[p,b];
-        b = x([n*N+(i-1)*n+1:n*N+i*n]);
-        v=[v,b];
-        b = x([2*n*N+(i-1)*n+1:2*n*N+i*n]);
-        a=[a,b];
-        b = x([3*n*N+(i-1)*n+1:3*n*N+i*n]);
-        u=[u,b];
-
-        b = trapezoidal_transcription(p(:,i), v(:,i), n, h);
-        w = [w;b];
-        b = trapezoidal_transcription(v(:,i), a(:,i), n, h);
-        w = [w;b];
-        r0 = [r0; p(1,i); v(1,i); v(n,i);];
+    for i=[1:number_of_parts]
+        bufor = trapezoidal_transcription(angle(:,i), velocity(:,i));
+        transcription_equations = [transcription_equations; bufor];
+        bufor = trapezoidal_transcription(velocity(:,i), acceleration(:,i));
+        transcription_equations = [transcription_equations; bufor];
+        boundary_conditions = [boundary_conditions; angle(1,i); velocity(1,i); velocity(number_of_time_steps,i);];
     endfor
 
-    r0 =[r0; l*cos(p(n,:))'-xk; l*sin(p(n,:))'-yk]; # Warunki brzegowe
+    boundary_conditions =[boundary_conditions; partslength*cos(angle(number_of_time_steps,:))'-xk; partslength*sin(angle(number_of_time_steps,:))'-yk]; # Warunki brzegowe
     
-    r1=[];
+    motion_equations= creating_motion_equations(angle, velocity, acceleration, torque);
 
-    for j=[1:n]
-    for i=[N:-1:1]
-        if i<N
-        S(:,i)=F(:,i+1)+S(:,i+1);
-        else
-        S(:,i)=zeros(2,1);
-        endif
-        F(1,i)=-l(i)/2 * (cos(p(j,i)) .* v(j,i).^2 + sin(p(j,i)) .* a(j,i));
-        F(2,i)=l(i)/2 * (-sin(p(j,i)) .* v(j,i).^2 + cos(p(j,i)) .* a(j,i));
-        vec=[-l(i)*sin(p(j,i)), l(i)*cos(p(j,i))];
-        b=1/3 * m(i) * l(i)^2 * a(j,i) - u(j,i) + vec * S(:,i);
-        r1=[r1;b];
-    endfor
-    endfor
-
-    r = [r0; w; r1];
+    r = [boundary_conditions; transcription_equations; motion_equations];
 
 endfunction
 
+
 # Funkcja celu - całka po czasie z sumy kwadratów momentów
 function obj = phi (x)
-    global n;
-    global N;
+
+    global number_of_time_steps;
+    global number_of_parts;
     global h;
     obj = 0;
 
-    for i=[1:N]
-        u = x([3*n*N+(i-1)*n+1:3*n*N+i*n]);
-        for j=[1:n-1]
-            obj = obj + 1/2 * h * (u(j)^2 + u(j+1)^2);
+    for i=[1:number_of_parts]
+        torque = x([3*number_of_time_steps*number_of_parts+(i-1)*number_of_time_steps+1:3*number_of_time_steps*number_of_parts+i*number_of_time_steps]);
+        for j=[1:number_of_time_steps-1]
+            obj = obj + 1/2 * h * (torque(j)^2 + torque(j+1)^2);
         endfor
     endfor
 
@@ -102,10 +86,10 @@ endfunction
 # Algorytm optymalizacyjny
 [x, obj, info, iter, nf, lambda] = sqp (x0, @phi, @g, [],[],[],300);
 
-obj
-info
-iter
+obj #końcowa wartość funkcji celu
+info #jak się zakończył algorytm sqp: 101 - normalnie, 102 - error, 103 - wszystkie iteracje, 104 - krok stał się za mały
+iter #liczba wykonanych iteracji przez sqp
 
 t=[0:h:T]';
 
-save wyniki.mat x l t N #zapis wyników
+save wyniki.mat x partslength t number_of_parts #zapis wyników

@@ -3,30 +3,20 @@ clc;
 
 load wyniki.mat
 
-n = rows(x)/(4*N);
+number_of_time_steps = rows(x)/(4*number_of_parts);
 
-p=[]; v=[]; a=[]; u=[];
+[p,v,a,u] = unpacking_x(x, number_of_parts, number_of_time_steps);
 
-for i=[1:N]
-    b = x([(i-1)*n+1:i*n]);
-    p=[p,b];
-    b = x([n*N+(i-1)*n+1:n*N+i*n]);
-    v=[v,b];
-    b = x([2*n*N+(i-1)*n+1:2*n*N+i*n]);
-    a=[a,b];
-    b = x([3*n*N+(i-1)*n+1:3*n*N+i*n]);
-    u=[u,b];
+trajx = zeros(1,number_of_time_steps);
+trajy = zeros(1,number_of_time_steps);
+
+for i=[1:number_of_parts]
+    trajx = [trajx; trajx(i,:) + (partslength(i) * cos(p(:,i)))'];
+    trajy = [trajy; trajy(i,:) + (partslength(i) * sin(p(:,i)))'];
 endfor
 
-trajx = [zeros(1,n)];
-trajy = [zeros(1,n)];
-for i=[1:N]
-    trajx = [trajx; trajx(i,:) + (l(i) * cos(p(:,i)))'];
-    trajy = [trajy; trajy(i,:) + (l(i) * sin(p(:,i)))'];
-endfor
-
-xkon=l*cos(p)';
-ykon=l*sin(p)';
+xkon=partslength*cos(p)';
+ykon=partslength*sin(p)';
 
 subplot(4,2,1)
 plot(t,p);
