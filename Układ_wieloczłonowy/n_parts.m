@@ -1,10 +1,11 @@
 clear;
 clc;
 
+tic();
 
 # Zmienne globalne
 global number_of_parts = 3; #liczba członów
-global number_of_time_steps=5; #liczba kroków czasowych
+global number_of_time_steps=6; #liczba kroków czasowych
 global T=1; #czas ruchu
 global h=T/(number_of_time_steps-1); #krok całkowy
 global mass=[1,1,1]; #masa
@@ -84,7 +85,7 @@ function obj = phi (x)
 endfunction
 
 # Algorytm optymalizacyjny
-[x, obj, info, iter, nf, lambda] = sqp (x0, @phi, @g, [],[],[],300);
+[x, obj, info, iter, nf, lambda] = sqp (x0, @phi, @g, [],[],[],2000);
 
 obj #końcowa wartość funkcji celu
 info #jak się zakończył algorytm sqp: 101 - normalnie, 102 - error, 103 - wszystkie iteracje, 104 - krok stał się za mały
@@ -93,3 +94,5 @@ iter #liczba wykonanych iteracji przez sqp
 t=[0:h:T]';
 
 save wyniki.mat x partslength t number_of_parts #zapis wyników
+
+time_of_execution=toc() 

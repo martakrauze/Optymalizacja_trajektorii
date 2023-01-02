@@ -1,7 +1,7 @@
 clear;
 clc;
 
-load wyniki.mat
+load wyniki_15ts.mat
 
 number_of_time_steps = rows(x)/(4*number_of_parts);
 
