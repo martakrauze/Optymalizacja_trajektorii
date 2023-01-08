@@ -26,7 +26,18 @@ global s_A1=[-l1/2;0];
 global s_B1=[l1/2;0];
 global s_B2=[-l2/2;0];
 global s_C2=[l2/2;0];
-global grav=0;
+
+l=[l1,l2];
+
+global S1=zeros(2,2);
+global S2=zeros(2,2);
+for part=[1:1:2]
+      S1(:,part)=[-l(part)/2;0];
+      S2(:,part)=[l(part)/2;0];
+endfor
+
+
+global grav=-9.81;
 
 theta1=0;
 theta2=0;
@@ -35,57 +46,69 @@ thetadot2=0;
 
 x0=[theta1,theta2,thetadot1,thetadot2];
 
+function r=d(part, joint, S1_g, S2_g)
+   global Q
+   r=[0;0];
+   for i=[joint:1:part]
+      r=r-S1_g(:,i)+S2_g(:,i);
+   endfor
+   r=r-S2_g(:,part);
+   r=Q*r;
+endfunction
+
+function r=d_dot(part, joint, S1_g, S2_g, fidot)
+   global Q
+   r=[0;0];
+   for i=[joint:1:part]
+      r=r+S1_g(:,i)*fidot(i)-S2_g(:,i)*fidot(i);
+   endfor
+   r=r+S2_g(:,part)*fidot(part);
+endfunction
+
 function r=fcn(x,t)
     global I
     global Q 
     global M
-    global s_A1
-    global s_B1
-    global s_B2
     global grav
     global m1
     global m2
+    global S1
+    global S2
 
-    g=[0;grav*m1;1;0;grav*m2;1];
+    g=[0;grav*m1;0;0;grav*m2;0];
 
     #g=[0;grav*m1;mom1(t)-mom2(t);0;grav*m2;mom2(t)];
 
     #[0;grav*m1;mom1-mom2;0;grav*m2;mom2]
-
-
-    fi1=x(1);
-    fi2=x(2)+x(1);
-    fidot1=x(3);
-    fidot2=x(4)+x(3);  
+ 
     thetadot=[x(3);x(4)];
 
-    s_A1_g=R(fi1)*s_A1;
-    s_B1_g=R(fi1)*s_B1;
-    s_B2_g=R(fi2)*s_B2;
+    fi=[x(1);x(2)+x(1)];
+    fidot=[x(3);x(3)+x(4)];
 
-    D=[I, Q * s_A1_g, zeros(2,3);
-       I, Q * s_B1_g, -I, -Q * s_B2_g];
-    
+    S1_g=zeros(2,2);
+    S2_g=zeros(2,2);
+    for part=[1:1:2]
+      S1_g(:,part)=R(fi(part))*S1(:,part);
+      S2_g(:,part)=R(fi(part))*S2(:,part);
+   endfor
 
-    d_11=-Q * s_A1_g;
-    d_21=Q*(-s_A1_g+s_B1_g-s_B2_g);
-    d_22=-Q*s_B2_g;
+   D=[I, Q * S1_g(:,1), zeros(2,3);
+      I, Q * S2_g(:,1), -I, -Q * S1_g(:,2)];
 
-    B=[d_11, zeros(2,1);
-          1, 0;
-       d_21, d_22;
+
+   B=[d(1,1,S1_g,S2_g), zeros(2,1);
+        1, 0;
+       d(2,1,S1_g,S2_g), d(2,2,S1_g,S2_g);
           1, 1];
-    
+
     #D*B   
 
-    d_11_dot=s_A1_g*fidot1;
-    d_21_dot=-(-s_A1_g*fidot1+s_B1_g*fidot1-s_B2_g*fidot2);
-    d_22_dot=s_B2_g*fidot2;
-
-    Bdot=[d_11_dot, zeros(2,1);
-          0, 0;
-       d_21_dot, d_22_dot;
+   Bdot=[d_dot(1,1,S1_g,S2_g,fidot), zeros(2,1);
+        0, 0;
+       d_dot(2,1,S1_g,S2_g,fidot), d_dot(2,2,S1_g,S2_g,fidot);
           0, 0];
+
 
     M_new=B' * M * B;
     g_new=B' * (g - M * Bdot * thetadot);

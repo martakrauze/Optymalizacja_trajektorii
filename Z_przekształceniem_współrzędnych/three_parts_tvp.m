@@ -49,84 +49,11 @@ for part=[1:1:3]
 endfor
 
 
-x0=ones(9*n,1);
-
-function r=fcn(x,u)
-    global I
-    global Q 
-    global M
-    global s_A1
-    global s_B1
-    global s_B2
-    global s_C2
-    global s_C3
-    global s_D3
-    global grav
-    global m1
-    global m2
-    global m3
-
-    g=[0;grav*m1;u(1)-u(2);0;grav*m2;u(2)-u(3);0;grav*m3;u(3)];
-
-    fi1=x(1);
-    fi2=x(2)+x(1);
-    fi3=x(3)+x(2)+x(1);
-    fidot1=x(4);
-    fidot2=x(5)+x(4);
-    fidot3=x(6)+x(5)+x(4);  
-    thetadot=[x(4);x(5);x(6)];
-
-    s_A1_g=R(fi1)*s_A1;
-    s_B1_g=R(fi1)*s_B1;
-    s_B2_g=R(fi2)*s_B2;
-    s_C2_g=R(fi2)*s_C2;
-    s_C3_g=R(fi3)*s_C3;
-    s_D3_g=R(fi3)*s_D3;
-
-    D=[I, Q * s_A1_g, zeros(2,3), zeros(2,3);
-       I, Q * s_B1_g, -I, -Q * s_B2_g, zeros(2,3);
-       zeros(2,3), I, Q * s_C2_g, -I, -Q * s_C3_g];
-    
-
-    d_11=-Q * s_A1_g;
-    d_21=Q*(-s_A1_g+s_B1_g-s_B2_g);
-    d_22=-Q*s_B2_g;
-    d_31=Q*(-s_A1_g+s_B1_g-s_B2_g+s_C2_g-s_C3_g);
-    d_32=Q*(-s_B2_g+s_C2_g-s_C3_g);
-    d_33=-Q*s_C3_g;
-
-    B=[d_11, zeros(2,1), zeros(2,1);
-          1,          0,          0;
-       d_21,       d_22, zeros(2,1);
-          1,          1,          0;
-       d_31,       d_32,       d_33;
-          1,          1,         1];
-    
-    d_11_dot=s_A1_g*fidot1;
-    d_21_dot=-(-s_A1_g*fidot1+s_B1_g*fidot1-s_B2_g*fidot2);
-    d_22_dot=s_B2_g*fidot2;
-    d_31_dot=-(-s_A1_g*fidot1+s_B1_g*fidot1-s_B2_g*fidot2+s_C2_g*fidot2-s_C3_g*fidot3);
-    d_32_dot=-(-s_B2_g*fidot2+s_C2_g*fidot2-s_C3_g*fidot3);
-    d_33_dot=s_C3_g*fidot3;
-
-    Bdot=[d_11_dot, zeros(2,1), zeros(2,1);
-                 0,          0,          0;
-          d_21_dot,   d_22_dot, zeros(2,1);
-                 0,          0,          0;
-          d_31_dot,   d_32_dot,   d_33_dot,
-                 0,          0,          0];
-        
-
-    M_new=B' * M * B;
-    g_new=B' * (g - M * Bdot * thetadot);
-
-    r1=x(4);
-    r2=x(5);
-    r3=x(6);
-    r4=M_new\g_new;
-    r=[r1;r2;r3;r4];
-
-endfunction
+x0=zeros(9*n,1);
+[xkon1,xkondot1,xkondotdot1]=function_tvp(T,n,xp,xk);
+[ykon1,ykondot1,ykondotdot1]=function_tvp(T,n,yp,yk);
+global xkon=xkon1;
+global ykon=ykon1;
 
 
 function r = g(x)
@@ -168,13 +95,18 @@ endfunction
 function obj = phi(x)
     global n;
     global h;
+    global xkon;
+    global ykon;
+    global l1;
+    global l2;
+    global l3;
     obj = 0;
-    u1 = x([6*n+1:7*n]);
-    u2 = x([7*n+1:8*n]);
-    u3 = x([8*n+1:9*n]);
-
+    
+    theta1 = x([1:n]);
+    theta2 = x([n+1:2*n]);
+    theta3 = x([2*n+1:3*n]);
     for i=[1:n-1]
-        obj = obj + 1/2 * h * (u1(i)^2 + u1(i+1)^2 + u2(i)^2 + u2(i+1)^2 + u3(i)^2 + u3(i+1)^2);
+        obj = obj + (l1*cos(theta1(i))+l2*cos(theta2(i)+theta1(i))+l3*cos(theta3(i)+theta2(i)+theta1(i))-xkon(i))^2+(l1*sin(theta1(i))+l2*sin(theta2(i)+theta1(i))+l3*sin(theta3(n)+theta2(n)+theta1(n))-ykon(i))^2;
     endfor
 
 endfunction

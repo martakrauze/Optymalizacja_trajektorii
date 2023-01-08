@@ -21,10 +21,6 @@ global l2=1.2;
 global m2=1;
 global J2=1/12 * m2 * l2^2;
 
-global s_A1=[-l1/2;0];
-global s_B1=[l1/2;0];
-global s_B2=[-l2/2;0];
-
 global M=diag([m1;m1;J1;m2;m2;J2]);
 
 l=[l1,l2];
@@ -36,38 +32,25 @@ for part=[1:1:2]
       S2(:,part)=[l(part)/2;0];
 endfor
 
+#global theta1k=0.7;
+#global theta2k=-0.5;
+#global theta1p=0.1;
+#global theta2p=-0.3;
+global xp=2;
+global yp=0;
+global xk=0.5;
+global yk=1.5;
+
 global grav=-9.81;
 #g=[0;grav*m1;0;0;grav*m2;0];
-global xp=2
-global yp=0
-global xk=0.5
-global yk=1.5
 
-#theta1=0;
-#theta2=0;
-#thetadot1=0;
-#thetadot2=0;
-
-load x.mat
-k = rows(x)/6;
-
-tp=[0:T/(k-1):T]';
-
-p10 = interp1(tp, x([1:k]), t');
-p20 = interp1(tp, x([k+1:2*k]), t');
-v10 = interp1(tp, x([2*k+1:3*k]), t');
-v20 = interp1(tp, x([3*k+1:4*k]), t');
-u10 = interp1(tp, x([4*k+1:5*k]), t');
-u20 = interp1(tp, x([5*k+1:6*k]), t');
-clear x
-#x0 = [p10; p20; v10; v20; u10; u20];
+[xkon1,xkondot1,xkondotdot1]=function_tvp(T,n,xp,xk);
+[ykon1,ykondot1,ykondotdot1]=function_tvp(T,n,yp,yk);
+global xkon=xkon1;
+global ykon=ykon1;
+#[theta2,thetadot2,thetadotdot2]=function_tvp(T,n,theta2p,theta2k);
+#x0=[theta1;theta2;thetadot1;thetadot2;thetadotdot1;thetadotdot2];
 x0=ones(6*n,1);
-#p10 = t'/T *2.11;
-#p20 = t'/T *(-1.55);
-#p10 = 0.1+t'/T *0.6;
-#p20 = -0.3-t'/T *0.2;
-#x0 = [p10; p20; ones(2*n,1); zeros(2*n,1)];
-#x0 = [p10; p20; zeros(4*n,1)];
 
 function r = g(x)
     global n;
@@ -77,12 +60,14 @@ function r = g(x)
     global l1;
     global l2;
     global grav;
-    global xk;
-    global yk;
+    global theta1k;
+    global theta2k;
+    global theta1p;
+    global theta2p;
     global xp;
     global yp;
-    global S_1
-    global S_2
+    global xk;
+    global yk;
 
     theta1 = x([1:n]);
     theta2 = x([n+1:2*n]);
@@ -92,7 +77,7 @@ function r = g(x)
     u=[x([4*n+1:5*n])';x([5*n+1:6*n])'];
 
     r =[thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n); l1*cos(theta1(n))+l2*cos(theta2(n)+theta1(n))-xk; l1*sin(theta1(n))+l2*sin(theta2(n)+theta1(n))-yk; l1*cos(theta1(1))+l2*cos(theta2(1)+theta1(1))-xp; l1*sin(theta1(1))+l2*sin(theta2(1)+theta1(1))-yp]; # Warunki brzegowe
-    #r =[theta1(1)-0.1; theta1(n)-0.7; theta2(1)+0.3; theta2(n)+0.5; thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n)];
+    #r =[theta1(1)-theta1p; theta1(n)-theta1k; theta2(1)-theta2p; theta2(n)-theta2k; thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n)];
     for i=[1:n-1]
         vec = q(:,i+1)-q(:,i)-1/2*h*(two_parts_dynamics_function(q(:,i+1),u(:,i+1))+two_parts_dynamics_function(q(:,i),u(:,i)));
         r=[r;vec];
@@ -103,12 +88,21 @@ endfunction
 function obj = phi(x)
     global n;
     global h;
+    global l1;
+    global l2;
+    global xkon;
+    global ykon;
     obj = 0;
-    u1 = x([4*n+1:5*n]);
-    u2 = x([5*n+1:6*n]);
+    #u1 = x([4*n+1:5*n]);
+    #u2 = x([5*n+1:6*n]);
 
+    #for i=[1:n-1]
+        #obj = obj + 1/2 * h * (u1(i)^2 + u1(i+1)^2 + u2(i)^2 + u2(i+1)^2);
+    #endfor
+    theta1 = x([1:n]);
+    theta2 = x([n+1:2*n]);
     for i=[1:n-1]
-        obj = obj + 1/2 * h * (u1(i)^2 + u1(i+1)^2 + u2(i)^2 + u2(i+1)^2);
+        obj = obj + (l1*cos(theta1(i))+l2*cos(theta2(i)+theta1(i))-xkon(i))^2+(l1*sin(theta1(i))+l2*sin(theta2(i)+theta1(i))-ykon(i))^2;
     endfor
 
 endfunction
