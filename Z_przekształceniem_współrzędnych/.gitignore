@@ -3,3 +3,5 @@ dif_solver_test.m
 octave-workspace
 one_part.m
 stara_wersja.m
+.gitignore
+*_old.m
