@@ -9,7 +9,7 @@ function r=three_parts_dynamics_function(x,u)
     global S1
     global S2
 
-    u=[0,0,0];
+    #u=[0,0,0];
 
    g=[0;grav*m1;u(1)-u(2);0;grav*m2;u(2)-u(3); 0;grav*m3;u(3)];
  

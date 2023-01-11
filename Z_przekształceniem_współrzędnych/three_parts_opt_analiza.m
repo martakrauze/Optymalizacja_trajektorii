@@ -1,17 +1,6 @@
 clear;
 clc;
 
-tic();
-
-function rot=R(fi)
-    rot=[cos(fi), -sin(fi); sin(fi), cos(fi)];
-endfunction
-
-T=1;
-global h=0.05;
-t=[0:h:T];
-global n=length(t)
-
 #Stałe:
 global I=[1, 0; 0, 1];
 global Q=[0, -1; 1, 0]; 
@@ -33,7 +22,7 @@ global s_B2=[-l2/2;0];
 global s_C2=[l2/2;0];
 global s_C3=[-l3/2;0];
 global s_D3=[l3/2;0];
-global grav=-9.81;
+global grav=0;
 global xp=2
 global yp=0.5
 global xk=2.5
@@ -47,19 +36,6 @@ for part=[1:1:3]
       S1(:,part)=[-l(part)/2;0];
       S2(:,part)=[l(part)/2;0];
 endfor
-
-#Dla bez g:
-#theta10=0.4151+t'/T*(-0.4037-0.4151);
-#theta20=0.6687+t'/T*(0.5246-(0.6687));
-#theta30=-1.9897+t'/T*(-1.1228-(-1.9897));
-
-#Z g:
-theta10=0.8+t'/T*(1.0375-0.8);
-theta20=-0.45+t'/T*(-0.9080-(-0.45));
-theta30=-1.5+t'/T*(-0.1198-(-1.5));
-
-#x0=zeros(9*n,1);
-x0=[theta10;theta20;theta30;zeros(3*n,1);ones(3*n,1)];
 
 function r = g(x)
     global n;
@@ -111,22 +87,31 @@ function obj = phi(x)
 
 endfunction
 #sqp (x0, @phi, @g, [],[],[],300)
-[x, obj, info, iter, nf, lambda] = sqp (x0, @phi, @g, [],[],[],300);
-time_of_execution=toc()
+T=1;
+exe=[];
+objs=[];
+iters=[];
+for j=[3:1:40]
+    clear global n
+    clear global h
+    global n=j
+    global h=T/(n+1);
+    t=[0:h:T];
+    j
+    n
+    theta10=0.4151+t'/T*(-0.4037-0.4151);
+    theta20=0.6687+t'/T*(0.5246-(0.6687));
+    theta30=-1.9897+t'/T*(-1.1228-(-1.9897));
 
-obj
-info
-iter
+    x0=[theta10;theta20;theta30;zeros(3*n,1);ones(3*n,1)];
 
-theta1 = x([1:n]);
-theta2 = x([n+1:2*n]);
-theta3 = x([2*n+1:3*n]);
-thetadot1 = x([3*n+1:4*n]);
-thetadot2 = x([4*n+1:5*n]);
-thetadot3 = x([5*n+1:6*n]);
-u1 = x([6*n+1:7*n]); 
-u2 = x([7*n+1:8*n]);
-u3 = x([8*n+1:9*n]);
-
-#plot(t,theta1,t, theta2, t,theta3)
-plot(l1*cos(theta1)+l2*cos(theta2+theta1)+l3*cos(theta3+theta2+theta1), l1*sin(theta1)+l2*sin(theta2+theta1)+l3*sin(theta3+theta2+theta1), "LineWidth",3)
+    tic();
+    [x, obj, info, iter, nf, lambda] = sqp (x0, @phi, @g, [],[],[],300);
+    time_of_execution=toc();
+    exe=[exe,time_of_execution];
+    objs=[objs,obj];
+    iters=[iters, iter];
+endfor
+j=[3:1:40];
+plot(j,exe,j,objs,j,iters)
+save analiza.m j exe objs iters

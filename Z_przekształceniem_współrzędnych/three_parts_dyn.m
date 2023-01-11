@@ -6,7 +6,7 @@ function rot=R(fi)
 endfunction
 
 T=10;
-h=0.001;
+h=0.01;
 t=[0:h:T];
 n=length(t)
 
@@ -67,6 +67,10 @@ fidot3=x(:,4)+x(:,5)+x(:,6);
 x3=l1*cos(fi1)+l2*cos(fi2)+l3/2*cos(fi3);
 y3=l1*sin(fi1)+l2*sin(fi2)+l3/2*sin(fi3);
 
-plot(t,x3,t,y3)
+load t.txt
+load x3.txt
+load y3.txt
+
+plot(t(1:1:501),x3(1:1:501),"LineWidth",3,t(1:1:501),y3(1:1:501),"LineWidth",3,t_free(1:1:501),x_free(1:1:501),"LineWidth",3,t_free(1:1:501),y_free(1:1:501),"LineWidth",3)
 #plot(xc,yc,xks,yks)
 #plot([zeros(1,101);xb],[zeros(1,101);yb],[xb;xc],[yb;yc])

@@ -19,10 +19,10 @@ global Q=[0, -1; 1, 0];
 global l1=1;
 global m1=1;
 global J1=1/12 * m1 * l1^2;
-global l2=1.1;
+global l2=1;
 global m2=1;
 global J2=1/12 * m2 * l2^2;
-global l3=1.2;
+global l3=1;
 global m3=1;
 global J3=1/12 * m3 * l3^2;
 
@@ -33,7 +33,7 @@ global s_B2=[-l2/2;0];
 global s_C2=[l2/2;0];
 global s_C3=[-l3/2;0];
 global s_D3=[l3/2;0];
-global grav=-9.81;
+global grav=0;
 global xp=2
 global yp=0.5
 global xk=2.5
@@ -86,7 +86,7 @@ function r = g(x)
     #thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n); thetadot3(1); thetadot3(n);];
 
     for i=[1:n-1]
-        vec = q(:,i+1)-q(:,i)-1/2*h*(three_parts_dynamic_function(q(:,i+1),u(:,i+1))+three_parts_dynamic_function(q(:,i),u(:,i)));
+        vec = q(:,i+1)-q(:,i)-1/2*h*(three_parts_dynamics_function(q(:,i+1),u(:,i+1))+three_parts_dynamics_function(q(:,i),u(:,i)));
         r=[r;vec];
     endfor
 
