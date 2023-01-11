@@ -75,6 +75,8 @@ function r=fcn(x,t)
     global S1
     global S2
 
+    #t
+
     g=[0;grav*m1;0;0;grav*m2;0];
 
     #g=[0;grav*m1;mom1(t)-mom2(t);0;grav*m2;mom2(t)];

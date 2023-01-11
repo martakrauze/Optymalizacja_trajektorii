@@ -1,4 +1,4 @@
-function r=three_parts_dynamic_function(x,u)
+function r=three_parts_dynamics_function(x,u)
     global I
     global Q 
     global M
@@ -9,6 +9,8 @@ function r=three_parts_dynamic_function(x,u)
     global S1
     global S2
 
+    u=[0,0,0];
+
    g=[0;grav*m1;u(1)-u(2);0;grav*m2;u(2)-u(3); 0;grav*m3;u(3)];
  
    thetadot=[x(4);x(5);x(6)];
@@ -18,7 +20,7 @@ function r=three_parts_dynamic_function(x,u)
 
    S1_g=zeros(2,3);
    S2_g=zeros(2,3);
-   for part=[1:1:2]
+   for part=[1:1:3]
       S1_g(:,part)=R(fi(part))*S1(:,part);
       S2_g(:,part)=R(fi(part))*S2(:,part);
    endfor
@@ -65,4 +67,8 @@ function r=d_dot(part, joint, S1_g, S2_g, fidot)
       r=r+S1_g(:,i)*fidot(i)-S2_g(:,i)*fidot(i);
    endfor
    r=r+S2_g(:,part)*fidot(part);
+endfunction
+
+function rot=R(fi)
+    rot=[cos(fi), -sin(fi); sin(fi), cos(fi)];
 endfunction
