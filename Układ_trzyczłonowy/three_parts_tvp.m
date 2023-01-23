@@ -8,9 +8,9 @@ function rot=R(fi)
 endfunction
 
 T=1;
-global h=0.05;
+global n=16
+global h=T/(n-1);
 t=[0:h:T];
-global n=length(t)
 
 #Stałe:
 global I=[1, 0; 0, 1];
@@ -48,18 +48,19 @@ for part=[1:1:3]
       S2(:,part)=[l(part)/2;0];
 endfor
 
-#Dla bez g:
-#theta10=0.4151+t'/T*(-0.4037-0.4151);
-#theta20=0.6687+t'/T*(0.5246-(0.6687));
-#theta30=-1.9897+t'/T*(-1.1228-(-1.9897));
 
-#Z g:
-theta10=0.8+t'/T*(1.0375-0.8);
-theta20=-0.45+t'/T*(-0.9080-(-0.45));
-theta30=-1.5+t'/T*(-0.1198-(-1.5));
+theta10=0.4151+t'/T*(0.4037-0.4151);
+theta20=0.6687+t'/T*(0.5246-(0.6687));
+theta30=-1.9897+t'/T*(-1.1228-(-1.9897));
 
-#x0=zeros(9*n,1);
 x0=[theta10;theta20;theta30;zeros(3*n,1);ones(3*n,1)];
+#x0=zeros(9*n,1);
+
+[xkon1,xkondot1,xkondotdot1]=function_tvp(T,n,xp,xk);
+[ykon1,ykondot1,ykondotdot1]=function_tvp(T,n,yp,yk);
+global xkon=xkon1;
+global ykon=ykon1;
+
 
 function r = g(x)
     global n;
@@ -85,10 +86,10 @@ function r = g(x)
     u = [x([6*n+1:7*n])';x([7*n+1:8*n])';x([8*n+1:9*n])'];
     q = [theta1';theta2'; theta3'; thetadot1'; thetadot2'; thetadot3'];
 
-    r =[thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n); thetadot3(1); thetadot3(n); l1*cos(theta1(n))+l2*cos(theta2(n)+theta1(n))+l3*cos(theta3(n)+theta2(n)+theta1(n))-xk; l1*sin(theta1(n))+l2*sin(theta2(n)+theta1(n))+l3*sin(theta3(n)+theta2(n)+theta1(n))-yk; l1*cos(theta1(1))+l2*cos(theta2(1)+theta1(1))+l3*cos(theta3(1)+theta2(1)+theta1(1))-xp; l1*sin(theta1(1))+l2*sin(theta2(1)+theta1(1))+l3*sin(theta3(1)+theta2(1)+theta1(1))-yp]; # Warunki brzegowe
+    #r =[thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n); thetadot3(1); thetadot3(n); l1*cos(theta1(n))+l2*cos(theta2(n)+theta1(n))+l3*cos(theta3(n)+theta2(n)+theta1(n))-xk; l1*sin(theta1(n))+l2*sin(theta2(n)+theta1(n))+l3*sin(theta3(n)+theta2(n)+theta1(n))-yk; l1*cos(theta1(1))+l2*cos(theta2(1)+theta1(1))+l3*cos(theta3(1)+theta2(1)+theta1(1))-xp; l1*sin(theta1(1))+l2*sin(theta2(1)+theta1(1))+l3*sin(theta3(1)+theta2(1)+theta1(1))-yp]; # Warunki brzegowe
 
-    #r=[theta1(1)+1; theta1(n)-1; theta2(1)+1; theta2(n)-1; theta3(1)+1; theta3(n)-1;
-    #thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n); thetadot3(1); thetadot3(n);];
+    r=[theta1(1)-0.4151; theta1(n)-0.4037; theta2(1)-0.6687; theta2(n)-0.5246; theta3(1)+1.9897; theta3(n)+1.1228;
+    thetadot1(1); thetadot1(n); thetadot2(1); thetadot2(n); thetadot3(1); thetadot3(n);];
 
     for i=[1:n-1]
         vec = q(:,i+1)-q(:,i)-1/2*h*(three_parts_dynamics_function(q(:,i+1),u(:,i+1))+three_parts_dynamics_function(q(:,i),u(:,i)));
@@ -100,19 +101,26 @@ endfunction
 function obj = phi(x)
     global n;
     global h;
+    global xkon;
+    global ykon;
+    global l1;
+    global l2;
+    global l3;
     obj = 0;
-    u1 = x([6*n+1:7*n]);
-    u2 = x([7*n+1:8*n]);
-    u3 = x([8*n+1:9*n]);
-
+    
+    theta1 = x([1:n]);
+    theta2 = x([n+1:2*n]);
+    theta3 = x([2*n+1:3*n]);
     for i=[1:n-1]
-        obj = obj + 1/2 * h * (u1(i)^2 + u1(i+1)^2 + u2(i)^2 + u2(i+1)^2 + u3(i)^2 + u3(i+1)^2);
+        obj = obj + (l1*cos(theta1(i))+l2*cos(theta2(i)+theta1(i))+l3*cos(theta3(i)+theta2(i)+theta1(i))-xkon(i))^2+(l1*sin(theta1(i))+l2*sin(theta2(i)+theta1(i))+l3*sin(theta3(n)+theta2(n)+theta1(n))-ykon(i))^2;
     endfor
 
 endfunction
 #sqp (x0, @phi, @g, [],[],[],300)
 [x, obj, info, iter, nf, lambda] = sqp (x0, @phi, @g, [],[],[],300);
 time_of_execution=toc()
+
+save tvp2.mat x
 
 obj
 info

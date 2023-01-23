@@ -71,6 +71,15 @@ load t.txt
 load x3.txt
 load y3.txt
 
-plot(t(1:1:501),x3(1:1:501),"LineWidth",3,t(1:1:501),y3(1:1:501),"LineWidth",3,t_free(1:1:501),x_free(1:1:501),"LineWidth",3,t_free(1:1:501),y_free(1:1:501),"LineWidth",3)
+#plot(t(1:1:401),x3(1:1:401),"LineWidth",3,t(1:1:401),y3(1:1:401),"LineWidth",3,t_free(1:1:401),x_free(1:1:401),"LineWidth",2,t_free(1:1:401),y_free(1:1:401),"LineWidth",2)
+#legend("3.part x - Octave", "3.part y - Octave","3.part x - FreeDyn","3.part y - FreeDyn")
+#xlabel("czas[s]")
+#ylabel("położenie[m]")
+#set(gca, "fontsize", 20)
 #plot(xc,yc,xks,yks)
 #plot([zeros(1,101);xb],[zeros(1,101);yb],[xb;xc],[yb;yc])
+
+plot(t(1:1:401),abs(x3(1:1:401)-x_free(1:1:401)),"LineWidth",3,t(1:1:401),abs(y3(1:1:401)-y_free(1:1:401)),"LineWidth",3)
+set(gca, "fontsize", 20)
+legend("moduł różnicy x", "moduł różnicy y","location","northwest")
+xlabel("czas[s]")
