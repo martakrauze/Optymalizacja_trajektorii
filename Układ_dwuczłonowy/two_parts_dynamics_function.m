@@ -1,12 +1,10 @@
-function r=two_parts_dynamics_function(x,u)
-    global I
-    global Q 
+function r=two_parts_dynamics_function(x,u) 
     global M
     global grav
     global m1
     global m2
-    global S1
-    global S2
+    global P
+    global S
 
     #u=[0;0;0];
 
@@ -17,21 +15,21 @@ function r=two_parts_dynamics_function(x,u)
    fi=[x(1);x(2)+x(1)];
    fidot=[x(3);x(3)+x(4)];
 
-   S1_g=zeros(2,2);
-   S2_g=zeros(2,2);
+   P_g=zeros(2,2);
+   S_g=zeros(2,2);
    for part=[1:1:2]
-      S1_g(:,part)=R(fi(part))*S1(:,part);
-      S2_g(:,part)=R(fi(part))*S2(:,part);
+      P_g(:,part)=R(fi(part))*P(:,part);
+      S_g(:,part)=R(fi(part))*S(:,part);
    endfor
 
-   B=[d(1,1,S1_g,S2_g), zeros(2,1);
+   B=[d(1,1,P_g,S_g), zeros(2,1);
         1, 0;
-       d(2,1,S1_g,S2_g), d(2,2,S1_g,S2_g);
+       d(2,1,P_g,S_g), d(2,2,P_g,S_g);
           1, 1];  
 
-   Bdot=[d_dot(1,1,S1_g,S2_g,fidot), zeros(2,1);
+   Bdot=[d_dot(1,1,P_g,S_g,fidot), zeros(2,1);
         0, 0;
-       d_dot(2,1,S1_g,S2_g,fidot), d_dot(2,2,S1_g,S2_g,fidot);
+       d_dot(2,1,P_g,S_g,fidot), d_dot(2,2,P_g,S_g,fidot);
           0, 0];
 
     M_new=B' * M * B;
@@ -44,23 +42,25 @@ function r=two_parts_dynamics_function(x,u)
 
 endfunction
 
-function r=d(part, joint, S1_g, S2_g)
-   global Q
+function r=d(part, joint, P_g, S_g)
+   Q=[0, -1; 1, 0];
+
    r=[0;0];
    for i=[joint:1:part]
-      r=r-S1_g(:,i)+S2_g(:,i);
+      r=r-P_g(:,i)+S_g(:,i);
    endfor
-   r=r-S2_g(:,part);
+   r=r-S_g(:,part);
    r=Q*r;
 endfunction
 
-function r=d_dot(part, joint, S1_g, S2_g, fidot)
-   global Q
+function r=d_dot(part, joint, P_g, S_g, fidot)
+   Q=[0, -1; 1, 0]; 
+   
    r=[0;0];
    for i=[joint:1:part]
-      r=r+S1_g(:,i)*fidot(i)-S2_g(:,i)*fidot(i);
+      r=r+P_g(:,i)*fidot(i)-S_g(:,i)*fidot(i);
    endfor
-   r=r+S2_g(:,part)*fidot(part);
+   r=r+S_g(:,part)*fidot(part);
 endfunction
 
 function rot=R(fi)

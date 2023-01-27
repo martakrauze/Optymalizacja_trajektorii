@@ -1,40 +1,38 @@
 clear;
 clc;
 
-load tvp.mat
+load two_parts_results.mat
 T=1;
-global n=length(x)/9;
+global n=length(x)/6;
 global h=T/(n-1);
 t=[0:h:T];
 
 
 global l1=1;
 global l2=1;
-global l3=1;
+#global l3=1;
 
-N=2
+N=2;
 
-l=[l1,l2,l3];
-#l=[l1,l2];
+#l=[l1,l2,l3];
+l=[l1,l2];
 
-p=[]; v=[]; u=[];
+theta=[]; thetadot=[]; u=[];
 
 for i=[1:N]
     b = x([(i-1)*n+1:i*n]);
-    p=[p,b];
+    theta=[theta,b];
     b = x([n*N+(i-1)*n+1:n*N+i*n]);
-    v=[v,b];
+    thetadot=[thetadot,b];
     b = x([2*n*N+(i-1)*n+1:2*n*N+i*n]);
     u=[u,b];
 endfor
-
-#p=p+ones(n,N)*6*pi
 
 fi=[zeros(n,N)];
 for part=[1:N]
     for i=[1:n]
         for j=[1:part]
-            fi(i,part)=fi(i,part)+p(i,j);
+            fi(i,part)=fi(i,part)+theta(i,j);
         endfor
     endfor
 endfor
@@ -49,23 +47,23 @@ endfor
 xkon=l*cos(fi)';
 ykon=l*sin(fi)';
 
-function plotangle(t,p)
-plot(t,p,"LineWidth", 2);
+function plotangle(t,theta)
+plot(t,theta,"LineWidth", 2);
 title("kąt")
 xlabel("t[s]")
 ylabel('\theta [rad]', 'interpreter', 'tex')
-legend("człon1","człon2", "człon3")
+legend("człon1","człon2")
 set(gca, "fontsize", 17)
 grid
 endfunction
 
-function plotvel(t,v)
+function plotvel(t,thetadot)
 #subplot(3,2,3)
-plot(t,v,"LineWidth", 2);
+plot(t,thetadot,"LineWidth", 2);
 title("prędkość kątowa")
 xlabel("t[s]")
 ylabel('\omega [rad/s]', 'interpreter', 'tex')
-legend("człon1","człon2", "człon3")
+legend("człon1","człon2")
 set(gca, "fontsize", 17)
 grid
 endfunction
@@ -76,7 +74,7 @@ plot(t,u,"LineWidth", 2);
 title("moment zadany")
 xlabel("t[s]")
 ylabel("M[Nm]")
-legend("człon1","człon2", "człon3")
+legend("człon1","człon2")
 set(gca, "fontsize", 17)
 grid
 endfunction
@@ -97,8 +95,8 @@ grid
 endfunction
 
 subplot(3,1,1)
-plotangle(t,p)
+plotangle(t,theta)
 subplot(3,1,2)
-plotvel(t,v)
+plotvel(t,thetadot)
 subplot(3,1,3)
 plotmom(t,u)
